@@ -1,0 +1,332 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Enums ----------
+
+enum VehicleType {
+  BIKE
+  CAR
+  SUV
+  TRUCK
+}
+
+enum SpaceType {
+  DRIVEWAY
+  GARAGE
+  LOT
+  STREET
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  SUSPENDED
+}
+
+enum ListingStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum BookingStatus {
+  PENDING
+  PAYMENT_PENDING
+  CONFIRMED
+  ACTIVE
+  CHECKED_IN
+  COMPLETED
+  CANCELLED
+  EXPIRED
+  REFUND_PENDING
+  REFUNDED
+  DISPUTED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum PaymentType {
+  BOOKING
+  EXTENSION
+  REFUND
+}
+
+enum IncidentStatus {
+  OPEN
+  UNDER_REVIEW
+  INVESTIGATING
+  RESOLVED
+  CLOSED
+}
+
+enum PayoutStatus {
+  PENDING
+  PAID
+}
+
+// ---------- Models ----------
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  phone         String?
+  name          String
+  passwordHash  String
+  isOwner       Boolean  @default(false)
+  isAdmin       Boolean  @default(false)
+  isVerified    Boolean  @default(false)
+  avatarUrl     String?
+  createdAt     DateTime @default(now())
+
+  vehicles          Vehicle[]
+  parkingSpaces     ParkingSpace[]
+  bookings          Booking[]
+  reviews           Review[]
+  favorites         Favorite[]
+  notifications     Notification[]
+  incidents         Incident[]
+  sessions          Session[]
+  walletTx          WalletTransaction[]
+  payouts           Payout[]
+  auditLogs         AuditLog[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Vehicle {
+  id         String      @id @default(cuid())
+  userId     String
+  regNumber  String
+  type       VehicleType
+  model      String
+  color      String
+  nickname   String?
+  isActive   Boolean     @default(true)
+  createdAt  DateTime    @default(now())
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookings Booking[]
+
+  @@unique([userId, regNumber])
+}
+
+model ParkingSpace {
+  id                 String             @id @default(cuid())
+  ownerId            String
+  title              String
+  description        String
+  lat                Float
+  lng                Float
+  address            String
+  landmark           String?
+  spaceType          SpaceType          @default(DRIVEWAY)
+  allowedTypes       String             @default("[\"CAR\",\"BIKE\"]")
+  maxDimensions      String?
+  isCovered          Boolean            @default(false)
+  isIndoor           Boolean            @default(false)
+  hasCCTV            Boolean            @default(false)
+  hasLighting        Boolean            @default(true)
+  hasEV              Boolean            @default(false)
+  pricePerHour       Float
+  currency           String             @default("INR")
+  openHour           Int                @default(0)
+  closeHour          Int                @default(24)
+  autoApprove        Boolean            @default(true)
+  verificationStatus VerificationStatus @default(PENDING)
+  status             ListingStatus      @default(ACTIVE)
+  rating             Float              @default(0)
+  ratingCount        Int                @default(0)
+  createdAt          DateTime           @default(now())
+
+  owner       User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  images      ParkingImage[]
+  bookings    Booking[]
+  reviews     Review[]
+  favorites   Favorite[]
+  incidents   Incident[]
+}
+
+model ParkingImage {
+  id        String   @id @default(cuid())
+  spaceId   String
+  url       String
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  space ParkingSpace @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+}
+
+model Booking {
+  id            String        @id @default(cuid())
+  bookingRef    String        @unique
+  userId        String
+  spaceId       String
+  vehicleId     String
+  startAt       DateTime
+  endAt         DateTime
+  status        BookingStatus @default(PENDING)
+  ownerApproved Boolean       @default(true)
+
+  baseAmount      Float
+  feeAmount       Float   @default(0)
+  taxAmount       Float   @default(0)
+  discountAmount  Float   @default(0)
+  totalAmount     Float
+  ownerAmount     Float
+  commissionAmount Float  @default(0)
+
+  qrToken      String?
+  otpHash      String?
+  otpExpiresAt DateTime?
+  otpAttempts  Int      @default(0)
+
+  checkInAt    DateTime?
+  checkOutAt   DateTime?
+  cancelledAt  DateTime?
+  cancelReason String?
+  extendedFrom String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  space     ParkingSpace  @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  vehicle   Vehicle       @relation(fields: [vehicleId], references: [id], onDelete: Restrict)
+  payments  Payment[]
+  review    Review?
+  incidents Incident[]
+
+  @@index([spaceId, status])
+  @@index([userId])
+}
+
+model Payment {
+  id          String        @id @default(cuid())
+  bookingId   String
+  provider    String
+  providerRef String?
+  type        PaymentType   @default(BOOKING)
+  amount      Float
+  status      PaymentStatus @default(PENDING)
+  createdAt   DateTime      @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  bookingId  String   @unique
+  userId     String
+  spaceId    String
+  rating     Int
+  comment    String?
+  ownerReply String?
+  moderated  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  booking Booking      @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  space   ParkingSpace @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  spaceId   String
+  createdAt DateTime @default(now())
+
+  user  User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  space ParkingSpace  @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, spaceId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   @default("info")
+  title     String
+  body      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Incident {
+  id          String          @id @default(cuid())
+  ref         String          @unique
+  reportedById String
+  bookingId   String?
+  spaceId     String?
+  type        String
+  description String
+  status      IncidentStatus  @default(OPEN)
+  resolution  String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  reporter User          @relation(fields: [reportedById], references: [id], onDelete: Cascade)
+  booking  Booking?      @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  space    ParkingSpace? @relation(fields: [spaceId], references: [id], onDelete: SetNull)
+}
+
+model WalletTransaction {
+  id          String   @id @default(cuid())
+  userId      String
+  amount      Float
+  type        String
+  description String
+  refId       String?
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Payout {
+  id        String       @id @default(cuid())
+  ownerId   String
+  amount    Float
+  status    PayoutStatus @default(PENDING)
+  note      String?
+  createdAt DateTime     @default(now())
+
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+}
+
+model PlatformSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String
+  targetType String?
+  targetId   String?
+  result     String?
+  createdAt  DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
