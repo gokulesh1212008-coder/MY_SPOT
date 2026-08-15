@@ -33,7 +33,20 @@ export default function CountUp({ to, duration = 1600, suffix = "", prefix = "" 
       { threshold: 0.4 }
     );
     io.observe(el);
-    return () => io.disconnect();
+    // Safety net: if the observer never fires (element never enters the
+    // viewport, or an embed/preview scrolls in a way the observer misses),
+    // land on the real value so the stat can never stay stuck at 0.
+    const fallback = setTimeout(() => {
+      if (!started.current) {
+        started.current = true;
+        setValue(to);
+        io.disconnect();
+      }
+    }, duration + 600);
+    return () => {
+      io.disconnect();
+      clearTimeout(fallback);
+    };
   }, [to, duration]);
 
   return (

@@ -10,3 +10,4 @@ prisma/dev.db-journal
 coverage/
 .DS_Store
 .freebuff/
+deploy/
