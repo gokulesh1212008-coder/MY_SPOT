@@ -64,12 +64,20 @@ export default function RegisterPage() {
     setOtpMessage("");
     setOtpSending(true);
     try {
-      const d = await apiFetch<{ ttlMinutes: number }>("/api/auth/register-otp", {
+      const d = await apiFetch<{ ttlMinutes: number; demoOtp?: string }>("/api/auth/register-otp", {
         method: "POST",
         body: JSON.stringify({ phone: cleanPhone }),
       });
       setOtpSent(true);
-      setOtpMessage(`Code sent to ${phone.trim()} — expires in ${d.ttlMinutes} min. In demo mode it's printed to the server console.`);
+      if (d.demoOtp) {
+        // No SMS provider configured → show the code so the flow is usable.
+        setOtp(d.demoOtp);
+        setOtpMessage(
+          `Demo mode — your verification code is ${d.demoOtp}. It expires in ${d.ttlMinutes} min. (No SMS provider configured, so it's shown here instead of being texted.)`
+        );
+      } else {
+        setOtpMessage(`Code sent to ${phone.trim()} — expires in ${d.ttlMinutes} min.`);
+      }
     } catch (err) {
       setOtpError(err instanceof Error ? err.message : "Could not send the code.");
     } finally {

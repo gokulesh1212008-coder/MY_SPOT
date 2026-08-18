@@ -16,5 +16,15 @@ export const POST = api(async (req: NextRequest) => {
   const { otp, ttlMinutes } = await sendRegistrationOtp(phone);
   await sendSms(phone, `Your MYSPOT verification code is ${otp}. It expires in ${ttlMinutes} minutes.`);
 
-  return json({ ok: true, ttlMinutes, masked: `${phone.slice(0, 4)}••••${phone.slice(-2)}` });
+  // When no SMS provider is configured the code cannot be delivered to the
+  // phone, so return it to the client (demo mode) so the flow stays usable.
+  // With a real provider (SMS_PROVIDER + SMS_API_KEY) it is never returned.
+  const smsConfigured = Boolean(process.env.SMS_PROVIDER && process.env.SMS_API_KEY);
+
+  return json({
+    ok: true,
+    ttlMinutes,
+    masked: `${phone.slice(0, 4)}••••${phone.slice(-2)}`,
+    ...(smsConfigured ? {} : { demoOtp: otp }),
+  });
 });
