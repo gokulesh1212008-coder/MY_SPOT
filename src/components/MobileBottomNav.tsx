@@ -5,11 +5,11 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
 
 const items = [
-  { href: "/dashboard", label: "Home", icon: "🏠" },
+  { href: "/map", label: "Home", icon: "🏠" },
+  { href: "/slots", label: "Slots", icon: "🅿️" },
+  { href: "/report", label: "Report", icon: "🛡️" },
   { href: "/dashboard/bookings", label: "Bookings", icon: "📅" },
-  { href: "/parking", label: "Map", icon: "🗺️" },
-  { href: "/dashboard/vehicles", label: "Vehicle", icon: "🚗" },
-  { href: "/dashboard/notifications", label: "Alerts", icon: "🔔" },
+  { href: "/dashboard", label: "Profile", icon: "👤" },
 ];
 
 export default function MobileBottomNav() {

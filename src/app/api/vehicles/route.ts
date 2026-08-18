@@ -22,6 +22,8 @@ export const POST = api(async (req: NextRequest) => {
   const model = String(body.model ?? "").trim();
   const color = String(body.color ?? "").trim();
   const nickname = body.nickname ? String(body.nickname).trim() : null;
+  const licenseNumber = body.licenseNumber ? String(body.licenseNumber).trim().toUpperCase() : null;
+  const insuranceNumber = body.insuranceNumber ? String(body.insuranceNumber).trim().toUpperCase() : null;
 
   if (!/^[A-Z0-9 -]{4,15}$/.test(regNumber)) {
     return apiError("Enter a valid registration number (e.g., MH01AB1234).", 422);
@@ -34,7 +36,17 @@ export const POST = api(async (req: NextRequest) => {
   if (dup) return apiError("You already added a vehicle with this registration number.", 409);
 
   const vehicle = await prisma.vehicle.create({
-    data: { userId: user.id, regNumber, type: type as VehicleType, model, color, nickname },
+    data: {
+      userId: user.id,
+      regNumber,
+      type: type as VehicleType,
+      model,
+      color,
+      nickname,
+      licenseNumber,
+      licenseVerified: Boolean(licenseNumber),
+      insuranceNumber,
+    },
   });
 
   return json({ vehicle }, 201);

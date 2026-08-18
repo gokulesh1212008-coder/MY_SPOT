@@ -82,6 +82,8 @@ model User {
   id            String   @id @default(cuid())
   email         String   @unique
   phone         String?
+  aadhar        String?
+  phoneVerified Boolean  @default(false)
   name          String
   passwordHash  String
   isOwner       Boolean  @default(false)
@@ -113,16 +115,28 @@ model Session {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+model OtpChallenge {
+  phone     String   @id
+  otpHash   String
+  expiresAt DateTime
+  attempts  Int      @default(0)
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
 model Vehicle {
-  id         String      @id @default(cuid())
-  userId     String
-  regNumber  String
-  type       VehicleType
-  model      String
-  color      String
-  nickname   String?
-  isActive   Boolean     @default(true)
-  createdAt  DateTime    @default(now())
+  id               String      @id @default(cuid())
+  userId           String
+  regNumber        String
+  type             VehicleType
+  model            String
+  color            String
+  licenseNumber    String?
+  licenseVerified  Boolean     @default(false)
+  insuranceNumber  String?
+  nickname         String?
+  isActive         Boolean     @default(true)
+  createdAt        DateTime    @default(now())
 
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   bookings Booking[]

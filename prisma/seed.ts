@@ -34,6 +34,8 @@ async function main() {
     data: {
       email: "driver@myspot.app",
       phone: "+91 90000 00001",
+      aadhar: "123456789012",
+      phoneVerified: true,
       name: "Aarav Sharma",
       passwordHash: pw,
       isVerified: true,
@@ -44,6 +46,8 @@ async function main() {
     data: {
       email: "owner@myspot.app",
       phone: "+91 90000 00002",
+      aadhar: "234567890123",
+      phoneVerified: true,
       name: "Priya Nair",
       passwordHash: pw,
       isOwner: true,
@@ -55,6 +59,8 @@ async function main() {
     data: {
       email: "owner2@myspot.app",
       phone: "+91 90000 00003",
+      aadhar: "345678901234",
+      phoneVerified: true,
       name: "Rahul Verma",
       passwordHash: pw,
       isOwner: true,
@@ -66,6 +72,8 @@ async function main() {
     data: {
       email: "admin@myspot.app",
       phone: "+91 90000 00004",
+      aadhar: "456789012345",
+      phoneVerified: true,
       name: "MYSPOT Admin",
       passwordHash: pw,
       isAdmin: true,
@@ -75,9 +83,9 @@ async function main() {
 
   await prisma.vehicle.createMany({
     data: [
-      { userId: driver.id, regNumber: "MH-01-AB-1234", type: "CAR" as VehicleType, model: "Maruti Suzuki Swift", color: "Red", nickname: "My Swift" },
-      { userId: driver.id, regNumber: "MH-02-CD-5678", type: "BIKE" as VehicleType, model: "Honda Activa", color: "Black", nickname: "Scooty" },
-      { userId: owner.id, regNumber: "MH-03-EF-9012", type: "SUV" as VehicleType, model: "Hyundai Creta", color: "White" },
+      { userId: driver.id, regNumber: "MH-01-AB-1234", type: "CAR" as VehicleType, model: "Maruti Suzuki Swift", color: "Red", nickname: "My Swift", licenseNumber: "MH012022000001", licenseVerified: true, insuranceNumber: "INS10000001" },
+      { userId: driver.id, regNumber: "MH-02-CD-5678", type: "BIKE" as VehicleType, model: "Honda Activa", color: "Black", nickname: "Scooty", licenseNumber: "MH012022000002", licenseVerified: true, insuranceNumber: "INS10000002" },
+      { userId: owner.id, regNumber: "MH-03-EF-9012", type: "SUV" as VehicleType, model: "Hyundai Creta", color: "White", licenseNumber: "MH012022000003", licenseVerified: true, insuranceNumber: "INS10000003" },
     ],
   });
 

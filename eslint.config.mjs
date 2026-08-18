@@ -14,5 +14,5 @@ export default defineConfig([
       "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
     },
   },
-  globalIgnores([".next/**", "node_modules/**", "prisma/**", "scripts/**", "coverage/**", "next-env.d.ts"]),
+  globalIgnores([".next/**", "deploy/**", "node_modules/**", "prisma/**", "scripts/**", "coverage/**", "next-env.d.ts"]),
 ]);

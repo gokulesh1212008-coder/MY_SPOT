@@ -37,8 +37,11 @@ export default function LoginPage() {
     setFieldErrors({});
     setBusy(true);
     try {
-      await apiFetch("/api/auth/login", { method: "POST", body: JSON.stringify(credentials) });
-      router.push("/dashboard");
+      const d = await apiFetch<{ user: { isAdmin?: boolean; isOwner?: boolean } }>("/api/auth/login", { method: "POST", body: JSON.stringify(credentials) });
+      // Route each role to its own interface.
+      if (d.user?.isAdmin) router.push("/admin");
+      else if (d.user?.isOwner) router.push("/owner");
+      else router.push("/map");
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign in failed.");
